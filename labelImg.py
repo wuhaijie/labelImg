@@ -13,6 +13,8 @@ from collections import defaultdict
 
 '''
 pyinstaller 打包指令
+
+pyinstaller labelImg.py -data "data;data"
 '''
 try:
     from PyQt5.QtGui import *
@@ -51,7 +53,7 @@ from libs.ustr import ustr
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = r'专用标注软件......'
+__appname__ = r'专用图像标注软件......'
 
 
 class WindowMixin(object):
