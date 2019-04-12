@@ -15,6 +15,10 @@ from collections import defaultdict
 pyinstaller 打包指令
 
 pyinstaller labelImg.py -data "data;data"
+
+pip install pyqt5 
+
+pip install lxml
 '''
 try:
     from PyQt5.QtGui import *
@@ -53,7 +57,7 @@ from libs.ustr import ustr
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = r'专用图像标注软件......'
+__appname__ = r'DR胸片专用图像标注软件 ...... Copyright © 2019 易辰浩（北京）科技有限公司. 版权所有'
 
 
 class WindowMixin(object):
@@ -93,8 +97,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Save as Pascal voc xml
         self.defaultSaveDir = defaultSaveDir
-        self.usingPascalVocFormat = True
-        self.usingYoloFormat = False
+        self.usingPascalVocFormat = False
+        self.usingYoloFormat = True
+        LabelFile.suffix = TXT_EXT
 
         # For loading all image under a directory
         self.mImgList = []
@@ -141,8 +146,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.editButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         # Add some of widgets to listLayout
-        listLayout.addWidget(self.editButton)
-        listLayout.addWidget(self.diffcButton)
+        #listLayout.addWidget(self.editButton)
+        #listLayout.addWidget(self.diffcButton)
         listLayout.addWidget(useDefaultLabelContainer)
 
         # Create and add a widget for showing current label items
@@ -194,8 +199,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
 
         self.setCentralWidget(scroll)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.filedock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
         self.filedock.setFeatures(QDockWidget.DockWidgetFloatable)
 
         self.dockFeatures = QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable
@@ -230,7 +235,7 @@ class MainWindow(QMainWindow, WindowMixin):
         save = action(getStr('save'), self.saveFile,
                       'Ctrl+S', 'save', getStr('saveDetail'), enabled=False)
 
-        save_format = action('&PascalVOC', self.change_format,
+        save_format = action('&YOLO', self.change_format,
                              'Ctrl+', 'format_voc', getStr('changeSaveFormat'), enabled=True)
 
         saveAs = action(getStr('saveAs'), self.saveFileAs,
@@ -275,7 +280,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.zoomWidget.setWhatsThis(
             u"图像缩放. 也可以通过"
             " %s 和 %s 在图像上操作." % (fmtShortcut("Ctrl+[-+]"),
-                                             fmtShortcut("Ctrl+Wheel")))
+                                  fmtShortcut("Ctrl+Wheel")))
         self.zoomWidget.setEnabled(False)
 
         zoomIn = action(getStr('zoomin'), partial(self.addZoom, 10),
@@ -376,9 +381,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.setCheckable(True)
         self.displayLabelOption.setChecked(settings.get(SETTING_PAINT_LABEL, False))
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
-
+        # remove , save_format from menu bar,force to yolo
         addActions(self.menus.file,
-                   (open, opendir, changeSavedir, openAnnotation, self.menus.recentFiles, save, save_format, saveAs,
+                   (open, opendir, changeSavedir, openAnnotation, self.menus.recentFiles, save, saveAs,
                     close, resetAll, quit))
         addActions(self.menus.help, (showInfo, showInfo))
         addActions(self.menus.view, (
@@ -399,13 +404,14 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&移动这里', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
+        # remove , save_format from menu bar,force to yolo
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, None, create, copy,
             delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
-
+        # remove , save_format from menu bar,force to yolo
         self.actions.advanced = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, save, save_format, None,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, save, None,
             createMode, editMode, None,
             hideAll, showAll)
 
