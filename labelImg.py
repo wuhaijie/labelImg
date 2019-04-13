@@ -15,6 +15,7 @@ from collections import defaultdict
 pyinstaller 打包指令
 
 pyinstaller labelImg.py -data "data;data"
+pyinstaller labelImg.py --add-data "data;data"
 
 pip install pyqt5 
 
@@ -57,7 +58,7 @@ from libs.ustr import ustr
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = r'DR胸片专用图像标注软件 ...... Copyright © 2019 易辰浩（北京）科技有限公司. 版权所有'
+__appname__ = r'DR胸片专用图像标注软件 ...... Copyright © 2019 版权所有'
 
 
 class WindowMixin(object):
@@ -146,9 +147,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.editButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         # Add some of widgets to listLayout
-        #listLayout.addWidget(self.editButton)
-        #listLayout.addWidget(self.diffcButton)
-        listLayout.addWidget(useDefaultLabelContainer)
+        # listLayout.addWidget(self.editButton)
+        # listLayout.addWidget(self.diffcButton)
+        # listLayout.addWidget(useDefaultLabelContainer)
 
         # Create and add a widget for showing current label items
         self.labelList = QListWidget()
@@ -165,10 +166,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dock.setObjectName(getStr('labels'))
         self.dock.setWidget(labelListContainer)
 
+        self.openDirTextLine = QLineEdit()
+        self.openDirTextLine.setText('当前工作目录...')
+        self.openDirTextLine.setEnabled(False)
         self.fileListWidget = QListWidget()
         self.fileListWidget.itemDoubleClicked.connect(self.fileitemDoubleClicked)
         filelistLayout = QVBoxLayout()
         filelistLayout.setContentsMargins(0, 0, 0, 0)
+        filelistLayout.addWidget(self.openDirTextLine)
         filelistLayout.addWidget(self.fileListWidget)
         fileListContainer = QWidget()
         fileListContainer.setLayout(filelistLayout)
@@ -265,10 +270,10 @@ class MainWindow(QMainWindow, WindowMixin):
                               'Ctrl+Shift+A', 'expert', getStr('advancedModeDetail'),
                               checkable=True)
 
-        hideAll = action('&Hide\nRectBox', partial(self.togglePolygons, False),
+        hideAll = action(getStr('hideAllBoxDetail'), partial(self.togglePolygons, False),
                          'Ctrl+H', 'hide', getStr('hideAllBoxDetail'),
                          enabled=False)
-        showAll = action('&Show\nRectBox', partial(self.togglePolygons, True),
+        showAll = action(getStr('showAllBoxDetail'), partial(self.togglePolygons, True),
                          'Ctrl+A', 'hide', getStr('showAllBoxDetail'),
                          enabled=False)
 
@@ -330,11 +335,11 @@ class MainWindow(QMainWindow, WindowMixin):
             self.popLabelListMenu)
 
         # Draw squares/rectangles
-        self.drawSquaresOption = QAction('Draw Squares', self)
-        self.drawSquaresOption.setShortcut('Ctrl+Shift+R')
-        self.drawSquaresOption.setCheckable(True)
-        self.drawSquaresOption.setChecked(settings.get(SETTING_DRAW_SQUARE, False))
-        self.drawSquaresOption.triggered.connect(self.toogleDrawSquare)
+        # self.drawSquaresOption = QAction('Draw Squares', self)
+        # self.drawSquaresOption.setShortcut('Ctrl+Shift+R')
+        # self.drawSquaresOption.setCheckable(True)
+        # self.drawSquaresOption.setChecked(settings.get(SETTING_DRAW_SQUARE, False))
+        # self.drawSquaresOption.triggered.connect(self.toogleDrawSquare)
 
         # Store actions for further handling.
         self.actions = struct(save=save, save_format=save_format, saveAs=saveAs, open=open, close=close,
@@ -348,8 +353,9 @@ class MainWindow(QMainWindow, WindowMixin):
                               fileMenuActions=(
                                   open, opendir, save, saveAs, close, resetAll, quit),
                               beginner=(), advanced=(),
+                              # delete menu:, self.drawSquaresOption
                               editMenu=(edit, copy, delete,
-                                        None, color1, self.drawSquaresOption),
+                                        None, color1),
                               beginnerContext=(create, edit, copy, delete),
                               advancedContext=(createMode, editMode, edit, copy,
                                                delete, shapeLineColor, shapeFillColor),
@@ -368,7 +374,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # Auto saving : Enable auto saving if pressing next
         self.autoSaving = QAction(getStr('autoSaveMode'), self)
         self.autoSaving.setCheckable(True)
-        self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, False))
+        self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, True))
         # Sync single class mode from PR#106
         self.singleClassMode = QAction(getStr('singleClsMode'), self)
         self.singleClassMode.setShortcut("Ctrl+Shift+S")
@@ -379,18 +385,20 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption = QAction(getStr('displayLabel'), self)
         self.displayLabelOption.setShortcut("Ctrl+Shift+P")
         self.displayLabelOption.setCheckable(True)
-        self.displayLabelOption.setChecked(settings.get(SETTING_PAINT_LABEL, False))
+        self.displayLabelOption.setChecked(settings.get(SETTING_PAINT_LABEL, True))
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
         # remove , save_format from menu bar,force to yolo
+        # remove openAnnotation, resetAll，changeSavedir,
+        # remove open
         addActions(self.menus.file,
-                   (open, opendir, changeSavedir, openAnnotation, self.menus.recentFiles, save, saveAs,
-                    close, resetAll, quit))
+                   (opendir, self.menus.recentFiles, save, saveAs,
+                    close, quit))
         addActions(self.menus.help, (showInfo, showInfo))
+        # remove singleClassMode, advancedMode
         addActions(self.menus.view, (
             self.autoSaving,
-            self.singleClassMode,
             self.displayLabelOption,
-            labels, advancedMode, None,
+            labels, None,
             hideAll, showAll, None,
             zoomIn, zoomOut, zoomOrg, None,
             fitWindow, fitWidth))
@@ -405,8 +413,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         # remove , save_format from menu bar,force to yolo
+        # remove verify, changeSavedir
+        # remove open
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, None, create, copy,
+            opendir, save, openPrevImg, openNextImg,  None, create, copy,
             delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
         # remove , save_format from menu bar,force to yolo
@@ -692,12 +702,22 @@ class MainWindow(QMainWindow, WindowMixin):
             item.setBackground(generateColorByText(text))
             self.setDirty()
 
+    def getFullPathImgList(self, idx):
+        return self.lastOpenDir + '\\' + self.mImgList[idx]
+
+
+    def getIndexImgList(self,filepath):
+        try:
+            return self.mImgList.index(filepath[len(self.lastOpenDir) + 1:])
+        except:
+            return 0
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
         currIndex = self.mImgList.index(ustr(item.text()))
         if currIndex < len(self.mImgList):
-            filename = self.mImgList[currIndex]
+            filename = self.getFullPathImgList(currIndex)
             if filename:
+                self.autoSave()  # auto save before loading others
                 self.loadFile(filename)
 
     # Add chris
@@ -860,19 +880,19 @@ class MainWindow(QMainWindow, WindowMixin):
 
         position MUST be in global coordinates.
         """
-        if not self.useDefaultLabelCheckbox.isChecked() or not self.defaultLabelTextLine.text():
-            if len(self.labelHist) > 0:
-                self.labelDialog = LabelDialog(
-                    parent=self, listItem=self.labelHist)
+        # if not self.useDefaultLabelCheckbox.isChecked() or not self.defaultLabelTextLine.text():
+        if len(self.labelHist) > 0:
+            self.labelDialog = LabelDialog(
+                parent=self, listItem=self.labelHist)
 
-            # Sync single class mode from PR#106
-            if self.singleClassMode.isChecked() and self.lastLabel:
-                text = self.lastLabel
-            else:
-                text = self.labelDialog.popUp(text=self.prevLabelText)
-                self.lastLabel = text
+        # Sync single class mode from PR#106
+        if self.singleClassMode.isChecked() and self.lastLabel:
+            text = self.lastLabel
         else:
-            text = self.defaultLabelTextLine.text()
+            text = self.labelDialog.popUp(text=self.prevLabelText)
+            self.lastLabel = text
+        # else:
+        #    text = self.defaultLabelTextLine.text()
 
         # Add Chris
         self.diffcButton.setChecked(False)
@@ -990,7 +1010,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # Tzutalin 20160906 : Add file list and dock to move faster
         # Highlight the file item
         if unicodeFilePath and self.fileListWidget.count() > 0:
-            index = self.mImgList.index(unicodeFilePath)
+            index = self.getIndexImgList(unicodeFilePath)
             fileWidgetItem = self.fileListWidget.item(index)
             fileWidgetItem.setSelected(True)
 
@@ -1130,9 +1150,9 @@ class MainWindow(QMainWindow, WindowMixin):
             settings[SETTING_LAST_OPEN_DIR] = ''
 
         settings[SETTING_AUTO_SAVE] = self.autoSaving.isChecked()
-        settings[SETTING_SINGLE_CLASS] = self.singleClassMode.isChecked()
+        settings[SETTING_SINGLE_CLASS] = False  # self.singleClassMode.isChecked()
         settings[SETTING_PAINT_LABEL] = self.displayLabelOption.isChecked()
-        settings[SETTING_DRAW_SQUARE] = self.drawSquaresOption.isChecked()
+        settings[SETTING_DRAW_SQUARE] = False  # self.drawSquaresOption.isChecked()
         settings.save()
 
     def loadRecent(self, filename):
@@ -1148,7 +1168,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 if file.lower().endswith(tuple(extensions)):
                     relativePath = os.path.join(root, file)
                     path = ustr(os.path.abspath(relativePath))
-                    images.append(path)
+                    # 显示的时候，去除前面的路径名称,[len(folderPath)+1:]
+                    images.append(path[len(folderPath) + 1:])
         natural_sort(images, key=lambda x: x.lower())
         return images
 
@@ -1199,6 +1220,7 @@ class MainWindow(QMainWindow, WindowMixin):
         targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
                                                               '%s - 打开目录' % __appname__, defaultOpenDirPath,
                                                               QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        self.autoSave()  # auto save before loading dirs
         self.importDirImages(targetDirPath)
 
     def importDirImages(self, dirpath):
@@ -1209,11 +1231,15 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dirname = dirpath
         self.filePath = None
         self.fileListWidget.clear()
-        self.mImgList = self.scanAllImages(dirpath)
+        self.mImgList = self.scanAllImages(dirpath)  # 显示的时候，去除前面的路径名称
         self.openNextImg()
+        '''
+            这里做了改变，不在文件列表框里面显示全部目录，这样可以减少显示区域
+        '''
         for imgPath in self.mImgList:
             item = QListWidgetItem(imgPath)
             self.fileListWidget.addItem(item)
+        self.openDirTextLine.setText(dirpath)
 
     def verifyImg(self, _value=False):
         # Proceding next image without dialog if having any label
@@ -1252,11 +1278,21 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.filePath is None:
             return
 
-        currIndex = self.mImgList.index(self.filePath)
+        currIndex = self.getIndexImgList(self.filePath)
         if currIndex - 1 >= 0:
-            filename = self.mImgList[currIndex - 1]
+            filename = self.getFullPathImgList(currIndex - 1)
             if filename:
                 self.loadFile(filename)
+
+    def autoSave(self):
+        if self.autoSaving.isChecked():
+            if self.defaultSaveDir is not None:
+                if self.dirty is True:
+                    self.saveFile()
+                    return True
+            else:
+                self.changeSavedirDialog()
+                return False
 
     def openNextImg(self, _value=False):
         # Proceding prev image without dialog if having any label
@@ -1276,11 +1312,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         filename = None
         if self.filePath is None:
-            filename = self.mImgList[0]
+            filename = self.getFullPathImgList(0)
         else:
-            currIndex = self.mImgList.index(self.filePath)
+            currIndex = self.getIndexImgList(self.filePath)
             if currIndex + 1 < len(self.mImgList):
-                filename = self.mImgList[currIndex + 1]
+                filename = self.getFullPathImgList(currIndex + 1)
 
         if filename:
             self.loadFile(filename)
@@ -1292,6 +1328,7 @@ class MainWindow(QMainWindow, WindowMixin):
         formats = ['*.%s' % fmt.data().decode("ascii").lower() for fmt in QImageReader.supportedImageFormats()]
         filters = "Image & Label files (%s)" % ' '.join(formats + ['*%s' % LabelFile.suffix])
         filename = QFileDialog.getOpenFileName(self, '%s - 选择文件或者标注文件' % __appname__, path, filters)
+        self.autoSave()  # auto save before loading dirs
         if filename:
             if isinstance(filename, (tuple, list)):
                 filename = filename[0]
@@ -1452,8 +1489,8 @@ class MainWindow(QMainWindow, WindowMixin):
         for shape in self.canvas.shapes:
             shape.paintLabel = self.displayLabelOption.isChecked()
 
-    def toogleDrawSquare(self):
-        self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
+    # def toogleDrawSquare(self):
+    #    self.canvas.setDrawingShapeToSquare(self.drawSquaresOption.isChecked())
 
 
 def inverted(color):
