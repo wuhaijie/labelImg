@@ -416,7 +416,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # remove verify, changeSavedir
         # remove open
         self.actions.beginner = (
-            opendir, save, openPrevImg, openNextImg,  None, create, copy,
+            opendir, save, openPrevImg, openNextImg, None, create, copy,
             delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
         # remove , save_format from menu bar,force to yolo
@@ -702,18 +702,26 @@ class MainWindow(QMainWindow, WindowMixin):
             item.setBackground(generateColorByText(text))
             self.setDirty()
 
+    # jeff
     def getFullPathImgList(self, idx):
         return self.lastOpenDir + '\\' + self.mImgList[idx]
 
-
-    def getIndexImgList(self,filepath):
+    def getIndexImgList(self, filepath):
         try:
             return self.mImgList.index(filepath[len(self.lastOpenDir) + 1:])
         except:
             return 0
+
+    def isLabelTxtExist(self, file_path):
+        file_base_name = os.path.basename(os.path.splitext(file_path)[0])
+        file_txt_path = os.path.join(self.defaultSaveDir, file_base_name + TXT_EXT)
+        return os.path.isfile(file_txt_path)
+
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
-        currIndex = self.mImgList.index(ustr(item.text()))
+        item_text = item.text()
+        item_text = item_text.replace(r'[已标注]', '')
+        currIndex = self.mImgList.index(ustr(item_text))
         if currIndex < len(self.mImgList):
             filename = self.getFullPathImgList(currIndex)
             if filename:
@@ -1237,8 +1245,13 @@ class MainWindow(QMainWindow, WindowMixin):
             这里做了改变，不在文件列表框里面显示全部目录，这样可以减少显示区域
         '''
         for imgPath in self.mImgList:
-            item = QListWidgetItem(imgPath)
-            self.fileListWidget.addItem(item)
+            if self.isLabelTxtExist(imgPath):
+                item = QListWidgetItem(imgPath + r'[已标注]')
+                self.fileListWidget.addItem(item)
+            else:
+                item = QListWidgetItem(imgPath)
+                self.fileListWidget.addItem(item)
+
         self.openDirTextLine.setText(dirpath)
 
     def verifyImg(self, _value=False):
