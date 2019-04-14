@@ -14,8 +14,7 @@ from collections import defaultdict
 '''
 pyinstaller 打包指令
 
-pyinstaller labelImg.py -data "data;data"
-pyinstaller labelImg.py --add-data "data;data"
+pyinstaller labelImg.py --add-data "data;data" --noconsole -i ./resources\icons\app.ico
 
 pyrcc5 -o resources.py resources.qrc
 
