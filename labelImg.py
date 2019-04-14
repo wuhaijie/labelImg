@@ -375,6 +375,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.autoSaving = QAction(getStr('autoSaveMode'), self)
         self.autoSaving.setCheckable(True)
         self.autoSaving.setChecked(settings.get(SETTING_AUTO_SAVE, True))
+        self.autoSaving.setEnabled(False)
         # Sync single class mode from PR#106
         self.singleClassMode = QAction(getStr('singleClsMode'), self)
         self.singleClassMode.setShortcut("Ctrl+Shift+S")
@@ -389,9 +390,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.displayLabelOption.triggered.connect(self.togglePaintLabelsOption)
         # remove , save_format from menu bar,force to yolo
         # remove openAnnotation, resetAll，changeSavedir,
-        # remove open
+        # remove open saveAs,
         addActions(self.menus.file,
-                   (opendir, self.menus.recentFiles, save, saveAs,
+                   (opendir, self.menus.recentFiles, save,
                     close, quit))
         addActions(self.menus.help, (showInfo, showInfo))
         # remove singleClassMode, advancedMode
@@ -1103,6 +1104,11 @@ class MainWindow(QMainWindow, WindowMixin):
             self.adjustScale()
         super(MainWindow, self).resizeEvent(event)
 
+    def close(self): # real signature unknown; restored from __doc__
+        """ close(self) -> bool """
+        self.autoSave()
+        super(MainWindow, self).close()
+
     def paintCanvas(self):
         assert not self.image.isNull(), "cannot paint null image"
         self.canvas.scale = 0.01 * self.zoomWidget.value()
@@ -1332,7 +1338,10 @@ class MainWindow(QMainWindow, WindowMixin):
                 filename = self.getFullPathImgList(currIndex + 1)
 
         if filename:
-            self.loadFile(filename)
+            try:
+                self.loadFile(filename)
+            except IndexError:
+                print("Index error loading:"+filename)
 
     def openFile(self, _value=False):
         if not self.mayContinue():
