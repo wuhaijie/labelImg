@@ -577,6 +577,7 @@ class MainWindow(QMainWindow, WindowMixin):
     def setDirty(self):
         self.dirty = True
         self.actions.save.setEnabled(True)
+        self.autoSave()  # now we enable auto save
 
     def setClean(self):
         self.dirty = False
@@ -1105,7 +1106,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.adjustScale()
         super(MainWindow, self).resizeEvent(event)
 
-    def close(self): # real signature unknown; restored from __doc__
+    def close(self):  # real signature unknown; restored from __doc__
         """ close(self) -> bool """
         self.autoSave()
         super(MainWindow, self).close()
@@ -1236,6 +1237,7 @@ class MainWindow(QMainWindow, WindowMixin):
                                                               '%s - 打开目录' % __appname__, defaultOpenDirPath,
                                                               QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
         self.autoSave()  # auto save before loading dirs
+
         self.importDirImages(targetDirPath)
 
     def importDirImages(self, dirpath):
@@ -1244,6 +1246,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.lastOpenDir = dirpath
         self.dirname = dirpath
+        self.defaultSaveDir = dirpath  # 当前存储路径同时改变
         self.filePath = None
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)  # 显示的时候，去除前面的路径名称
@@ -1342,7 +1345,7 @@ class MainWindow(QMainWindow, WindowMixin):
             try:
                 self.loadFile(filename)
             except IndexError:
-                print("Index error loading:"+filename)
+                print("Index error loading:" + filename)
 
     def openFile(self, _value=False):
         if not self.mayContinue():
@@ -1403,7 +1406,7 @@ class MainWindow(QMainWindow, WindowMixin):
             try:
                 idx = self.getIndexImgList(self.filePath)
                 fileWidgetItem = self.fileListWidget.item(idx)
-                if  fileWidgetItem.text().find(r'[已标注]') == -1:
+                if fileWidgetItem.text().find(r'[已标注]') == -1:
                     fileWidgetItem.setText(fileWidgetItem.text() + r'[已标注]')
             except:
                 pass

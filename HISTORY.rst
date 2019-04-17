@@ -1,6 +1,11 @@
 =======
 History
 =======
+1.8.2 (2019-04-17)
+------------------
+
+* restricted use for labelling only
+* auto save to the opened directory
 
 1.8.1 (2018-12-02)
 ------------------
