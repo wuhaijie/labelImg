@@ -1236,6 +1236,7 @@ class MainWindow(QMainWindow, WindowMixin):
         targetDirPath = ustr(QFileDialog.getExistingDirectory(self,
                                                               '%s - 打开目录' % __appname__, defaultOpenDirPath,
                                                               QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+        self.defaultSaveDir = targetDirPath  # 当前存储路径同时改变
         self.autoSave()  # auto save before loading dirs
 
         self.importDirImages(targetDirPath)
