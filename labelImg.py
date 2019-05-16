@@ -59,7 +59,7 @@ from libs.ustr import ustr
 from libs.version import __version__
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = r'DR胸片专用图像标注软件 ...... Copyright © 2019 版权所有'
+__appname__ = r'DR胸片专用图像标注软件 V' + __version__ + r' Copyright © 2019 版权所有 易辰浩（北京）科技有限公司'
 
 
 class WindowMixin(object):

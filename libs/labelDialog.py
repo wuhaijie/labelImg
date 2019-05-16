@@ -20,6 +20,7 @@ class LabelDialog(QDialog):
         self.edit.setText(text)
         self.edit.setValidator(labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
+        self.edit.setEnabled(False)
 
         model = QStringListModel()
         model.setStringList(listItem)

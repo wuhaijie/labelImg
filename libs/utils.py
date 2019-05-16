@@ -78,26 +78,69 @@ def fmtShortcut(text):
 
 
 def generateColorByText(text):
-    s = ustr(text)
-    hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
-    r = int((hashCode / 255) % 255)
-    g = int((hashCode / 65025)  % 255)
-    b = int((hashCode / 16581375)  % 255)
-    return QColor(r, g, b, 100)
+    prefix = text.split('.')[0]
+    idx = 0
+    if not prefix:
+        idx = 0
+    try:
+        i = int(prefix.strip())
+        if i == 1 or i == 2:
+            idx = 0
+        if i >= 3 and i <= 6:
+            idx = 1
+        if i >= 7 and i <= 9:
+            idx = 2
+        if i>=10:
+            idx = 3
+    except:
+        idx = 0
+
+    color_group = [
+        {
+            'r': 255,
+            'g': 30,
+            'b': 0,
+            'a': 128
+        },
+        {
+            'r': 255,
+            'g': 255,
+            'b': 0,
+            'a': 128
+        },
+        {
+            'r': 0,
+            'g': 255,
+            'b': 0,
+            'a': 100
+        },
+        {
+            'r': 170,
+            'g': 100,
+            'b': 30,
+            'a': 255
+        },
+    ]
+    return QColor(color_group[idx]['r'], color_group[idx]['g'],color_group[idx]['b'], color_group[idx]['a'])
+
 
 def have_qstring():
     '''p3/qt5 get rid of QString wrapper as py3 has native unicode str type'''
     return not (sys.version_info.major >= 3 or QT_VERSION_STR.startswith('5.'))
 
+
 def util_qt_strlistclass():
     return QStringList if have_qstring() else list
 
-def natural_sort(list, key=lambda s:s):
+
+def natural_sort(list, key=lambda s: s):
     """
     Sort the list into natural alphanumeric order.
     """
+
     def get_alphanum_key_func(key):
         convert = lambda text: int(text) if text.isdigit() else text
         return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
+
     sort_key = get_alphanum_key_func(key)
     list.sort(key=sort_key)
